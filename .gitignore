@@ -4,3 +4,14 @@ __pycache__/
 venv/
 .idea/
 .vscode/
+
+# Local terraform directories
+.terraform/
+
+# .tfstate files (These contain sensitive data and should not be in Git)
+*.tfstate
+*.tfstate.*
+
+# Crash logs and temporary files
+*.clog
+.terraform.lock.hcl

@@ -1,7 +1,7 @@
 import os
 import time
 from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy import create_backend, create_engine, Column, Integer, String, Boolean
+from sqlalchemy import create_engine, Column, Integer, String, Boolean
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
 # Configuración de la Base de Datos (Se lee de variables de entorno, buena práctica Cloud/DevOps)
