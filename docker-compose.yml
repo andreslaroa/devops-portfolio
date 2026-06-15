@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # Servicio 1: La Base de Datos
+  postgres_db:
+    image: postgres:16-alpine
+    container_name: devops_postgres
+    environment:
+      POSTGRES_USER: devops_user
+      POSTGRES_PASSWORD: super_secret_password
+      POSTGRES_DB: todo_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - devops_network
+
+  # Servicio 2: Nuestra API de FastAPI
+  api_app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: devops_api
+    ports:
+      - "8000:8000"
+    environment:
+      # Le indicamos a la app cómo conectarse a la BD usando el nombre del servicio 'postgres_db' como host
+      - DATABASE_URL=postgresql://devops_user:super_secret_password@postgres_db:5432/todo_db
+    depends_on:
+      - postgres_db
+    networks:
+      - devops_network
+
+volumes:
+  postgres_data: # Mantiene los datos de la BD guardados aunque apagues el contenedor
+
+networks:
+  devops_network: # Red interna aislada para que los contenedores se hablen entre sí
+    driver: bridge
