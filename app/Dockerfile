@@ -3,7 +3,6 @@ FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
-# Instalar dependencias del sistema necesarias para compilar ciertas librerías de Python
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
@@ -11,8 +10,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY requirements.txt .
 
-# Descargamos las dependencias en una carpeta local llamada /install
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+# ✅ CORREGIDO: Se añade "pip install" después de definir el montaje de la caché
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --prefix=/install -r requirements.txt
 
 
 # --- Etapa 2: Imagen Final (Producción) ---
@@ -20,20 +20,16 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Instalar solo la librería en tiempo de ejecución para PostgreSQL
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copiamos solo las librerías instaladas en la etapa anterior (pesa mucho menos)
+# ✅ CORREGIDO: Eliminado apt-get. Dependencias puramente estáticas en python.
 COPY --from=builder /install /usr/local
-COPY . .
 
-# BUENA PRÁCTICA DE SEGURIDAD: No correr el contenedor como Root
-RUN useradd -m devopsuser && chown -R devopsuser:devopsuser /app
+# ✅ CORREGIDO: Se crea el usuario ANTES y se inyectan los archivos con el propietario correcto en un solo paso
+RUN useradd -m devopsuser
+
+COPY --chown=devopsuser:devopsuser . .
+
 USER devopsuser
 
 EXPOSE 8000
 
-# Comando para arrancar la API con Uvicorn
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

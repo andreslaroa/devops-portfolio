@@ -1,0 +1,10 @@
+.git
+.gitignore
+.github
+terraform/
+*.tfstate*
+.terraform/
+README.md
+docker-compose.yml
+__pycache__/
+*.pyc

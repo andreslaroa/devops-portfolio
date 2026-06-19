@@ -1,32 +1,40 @@
 import os
 import time
 from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy import create_engine, Column, Integer, String, Boolean
-from sqlalchemy.orm import declarative_base, sessionmaker, Session
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, Session
 
-# Configuración de la Base de Datos (Se lee de variables de entorno, buena práctica Cloud/DevOps)
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/todo_db")
+# 1. Database Configuration via Environment Variables
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/portfolio_db")
 
-engine = create_engine(DATABASE_URL)
+# Wait for DB to be ready (retry loop for robust Docker startup)
+engine = None
+for _ in range(5):
+    try:
+        engine = create_engine(DATABASE_URL)
+        break
+    except Exception:
+        time.sleep(2)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Modelo de la Base de Datos
-class TodoItem(Base):
-    __tablename__ = "todos"
+# 2. Database Model
+class Item(Base):
+    __tablename__ = "items"
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
-    completed = Column(Boolean, default=False)
+    description = Column(String)
 
-# Crear las tablas si no existen (Para simplificar el inicio local)
-try:
+# Create tables if they don't exist
+if engine:
     Base.metadata.create_all(bind=engine)
-except Exception as e:
-    print(f"Esperando a la base de datos... Error temporal: {e}")
 
-app = FastAPI(title="DevOps Portfolio API")
+# 3. FastAPI Initialization
+app = FastAPI(title="DevOps Portfolio Enterprise API", version="2.0.0")
 
-# Dependencia para obtener la sesión de BD
+# Dependency to get DB session
 def get_db():
     db = SessionLocal()
     try:
@@ -34,21 +42,24 @@ def get_db():
     finally:
         db.close()
 
-# --- Endpoints ---
+# 4. Endpoints
+@app.get("/health", tags=["Monitoring"])
+def health_check(db: Session = Depends(get_db)):
+    try:
+        # Test DB connection health
+        db.execute("SELECT 1")
+        return {"status": "healthy", "database": "connected", "environment": os.getenv("ENV", "production")}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database unhealthy: {str(e)}")
 
-@app.get("/health", tags=["DevOps"])
-def health_check():
-    """Endpoint que usarán los balanceadores y Kubernetes para verificar la app"""
-    return {"status": "healthy", "timestamp": time.time()}
-
-@app.get("/todos", tags=["Items"])
-def get_todos(db: Session = Depends(get_db)):
-    return db.query(TodoItem).all()
-
-@app.post("/todos", tags=["Items"])
-def create_todo(title: str, completed: bool = False, db: Session = Depends(get_db)):
-    db_item = TodoItem(title=title, completed=completed)
+@app.post("/items", tags=["Business Logic"])
+def create_item(title: str, description: str, db: Session = Depends(get_db)):
+    db_item = Item(title=title, description=description)
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
     return db_item
+
+@app.get("/items", tags=["Business Logic"])
+def read_items(db: Session = Depends(get_db)):
+    return db.query(Item).all()
