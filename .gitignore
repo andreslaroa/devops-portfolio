@@ -9,8 +9,9 @@ venv/
 .terraform/
 
 # .tfstate files (These contain sensitive data and should not be in Git)
-*.tfstate
+terraform/*.tfstate
 *.tfstate.*
+*.tfstate
 
 # Crash logs and temporary files
 *.clog
