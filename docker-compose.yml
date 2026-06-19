@@ -18,7 +18,7 @@ services:
   api_app:
     build:
       context: .              # 📂 Ajustado a la raíz para gestionar rutas globales
-      dockerfile: Dockerfile
+      dockerfile: app/Dockerfile
     container_name: devops_api
     ports:
       - "8000:8000"           # Solo la API expone tráfico hacia el exterior
