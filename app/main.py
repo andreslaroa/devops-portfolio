@@ -48,7 +48,7 @@ def get_db():
 def health_check(db: Session = Depends(get_db)):
     try:
         # Test DB connection health
-        db.execute("SELECT 1")
+        result = db.execute(text("SELECT 1"))
         return {"status": "healthy", "database": "connected", "environment": os.getenv("ENV", "production")}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database unhealthy: {str(e)}")
