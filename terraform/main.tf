@@ -12,6 +12,7 @@ resource "aws_vpc" "portfolio_vpc" {
 resource "aws_subnet" "portfolio_public_subnet" {
   vpc_id                  = aws_vpc.portfolio_vpc.id
   cidr_block              = "10.0.1.0/24"
+  availability_zone = "us-east-1a"
   map_public_ip_on_launch = true # ✅ Corregido: Booleano nativo sin comillas
   
   # 🔒 CORREGIDO: Bloque "filter" eliminado. El nombre se asigna abajo en los tags.
@@ -105,7 +106,7 @@ resource "aws_instance" "portfolio_server" {
   ami           = "ami-0c7217cdde317cfec" # Asegúrate de que esta AMI está en tu región (us-east-1)
   instance_type = "t3.small"             # Cambiado a t2.micro para evitar cobros (Free Tier real)
   subnet_id     = aws_subnet.portfolio_public_subnet.id
-
+  availability_zone = "us-east-1a"
   key_name = aws_key_pair.portfolio_key.key_name
 
   vpc_security_group_ids = [aws_security_group.portfolio_sg.id]
