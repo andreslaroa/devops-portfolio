@@ -38,7 +38,6 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 1. Navigate to project folder or clone it if it doesn't exist
             if [ ! -d "devops-portfolio" ]; then
               git clone https://github.com/${{ github.repository }}.git
               cd devops-portfolio
@@ -47,8 +46,9 @@ jobs:
               git pull origin main
             fi
             
-            # 2. Run the application using Docker Compose in the cloud server
-            sudo docker-compose up -d --build
-
-            # 3. Final cleanup
+            # ✅ ENABLE BUILDKIT FOR CLASSIC DOCKER COMPOSE
+            export DOCKER_BUILDKIT=1
+            export COMPOSE_DOCKER_CLI_BUILD=1
+            
+            sudo -E docker-compose up -d --build
             sudo docker image prune -f
