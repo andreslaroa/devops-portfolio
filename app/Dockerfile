@@ -11,8 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 
 # ✅ CORREGIDO: Se añade "pip install" después de definir el montaje de la caché
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --prefix=/install -r requirements.txt
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 
 # --- Etapa 2: Imagen Final (Producción) ---
